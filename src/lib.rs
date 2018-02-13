@@ -1,4 +1,9 @@
+#[cfg(feature = "serde")]
+#[macro_use]
+extern crate serde;
+
 #[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct LorentzVector {
     pub e: f64,
     pub px: f64,

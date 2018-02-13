@@ -2,6 +2,7 @@
 #[macro_use]
 extern crate serde;
 
+use std::f64;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
 #[derive(Copy, Clone, Debug, PartialEq, Default)]
@@ -11,6 +12,72 @@ pub struct LorentzVector {
     pub px: f64,
     pub py: f64,
     pub pz: f64,
+}
+
+impl LorentzVector {
+    pub fn pt_squared(&self) -> f64 {
+        self.px.powi(2) + self.py.powi(2)
+    }
+
+    pub fn pt(&self) -> f64 {
+        self.pt_squared().sqrt()
+    }
+
+    pub fn mass_squared(&self) -> f64 {
+        self.e.powi(2) - self.px.powi(2) - self.py.powi(2) - self.pz.powi(2)
+    }
+
+    pub fn mass(&self) -> f64 {
+        self.mass_squared().sqrt()
+    }
+
+    pub fn rapidity(&self) -> f64 {
+        0.5 * ((self.e + self.pz) / (self.e - self.pz)).ln()
+    }
+
+    pub fn phi(&self) -> f64 {
+        if self.px == 0. && self.py == 0. {
+            0.0
+        } else {
+            self.px.atan2(self.py)
+        }
+    }
+
+    pub fn delta_phi(&self, other: &LorentzVector) -> f64 {
+        let num = self.px * other.px + self.py * other.py;
+        let denom =
+            ((self.px.powi(2) + self.py.powi(2)) * (other.px.powi(2) + other.py.powi(2))).sqrt();
+        let dphi = (num / denom).acos();
+        if dphi.is_nan() {
+            self.delta_phi_slow(other)
+        } else {
+            dphi
+        }
+    }
+
+    fn delta_phi_slow(&self, other: &LorentzVector) -> f64 {
+        let pi2 = 2. * f64::consts::PI;
+        let dphi = self.phi() - other.phi();
+        if dphi >= f64::consts::PI {
+            dphi - pi2
+        } else if dphi < -f64::consts::PI {
+            dphi + pi2
+        } else {
+            dphi
+        }
+    }
+
+    pub fn delta_r(&self, other: &LorentzVector) -> f64 {
+        let delta_rap = 0.5
+            * ((self.e + self.pz) / (self.e - self.pz) * (other.e - other.pz)
+                / (other.e + other.pz))
+                .ln();
+        (self.delta_phi(other).powi(2) + delta_rap.powi(2)).sqrt()
+    }
+
+    pub fn dot(&self, other: &LorentzVector) -> f64 {
+        self.e * other.e - self.px * other.px - self.py * other.py - self.pz * other.pz
+    }
 }
 
 macro_rules! impl_add_op {

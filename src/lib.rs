@@ -2,7 +2,7 @@
 #[macro_use]
 extern crate serde;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct LorentzVector {
     pub e: f64,
